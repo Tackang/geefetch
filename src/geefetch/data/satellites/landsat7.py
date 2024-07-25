@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 __all__ = []
 
 
-class Landsat8Base(SatelliteABC):
+class Landsat7Base(SatelliteABC):
     _bands = [
         "SR_B1",
         "SR_B2",
@@ -31,10 +31,10 @@ class Landsat8Base(SatelliteABC):
         # "QA_PIXEL"
     ]
     _selected_bands = [
+        "SR_B1",
         "SR_B2",
         "SR_B3",
         "SR_B4",
-        "SR_B5",
     ]
 
     @property
@@ -76,7 +76,7 @@ class Landsat8Base(SatelliteABC):
         start_date: str,
         end_date: str,
     ) -> ee.ImageCollection:
-        """Get Landsat 8 collection.
+        """Get Landsat 7 collection.
 
         Parameters
         ----------
@@ -90,7 +90,7 @@ class Landsat8Base(SatelliteABC):
         bounds = aoi.buffer(10_000).transform(WGS84).to_ee_geometry()
 
         landsat_col = (
-            ee.ImageCollection("LANDSAT/LC08/C02/T1_L2")
+            ee.ImageCollection("LANDSAT/LE07/C02/T1_L2")
             .filterDate(start_date, end_date)
             .filterBounds(bounds)
         )
@@ -104,7 +104,7 @@ class Landsat8Base(SatelliteABC):
         # LOWER_RIGHT = 2
         # UPPER_RIGHT = 3
 
-        def maskLandsat8cloud(im: ee.Image) -> ee.Image:
+        def maskLandsat7cloud(im: ee.Image) -> ee.Image:
             qa = im.select("QA_PIXEL")
             fillBitMask = 1 << 0
             dilatedCloudBitMask = 1 << 1
@@ -352,11 +352,11 @@ class Landsat8Base(SatelliteABC):
         # def value(list, index):
         #     return ee.Number(list.get(index))
 
-        return landsat_col.map(maskLandsat8cloud)
+        return landsat_col.map(maskLandsat7cloud)
         # return landsat_col.map(maskLandsat8cloud).map(applyBRDF_L8)
 
 
-class Landsat8GEE(Landsat8Base):
+class Landsat7GEE(Landsat7Base):
     def get(
         self,
         aoi: BoundingBox,
@@ -366,7 +366,7 @@ class Landsat8GEE(Landsat8Base):
         dtype: DType = DType.UInt16,
         **kwargs: Any,
     ) -> DownloadableGEEImage:
-        """Get Landsat 8 collection.
+        """Get Landsat 7 collection.
 
         Parameters
         ----------
@@ -383,7 +383,7 @@ class Landsat8GEE(Landsat8Base):
         Returns
         -------
         landsat_im : DownloadableGEEImage
-            A Landsat 8 composite image of the specified AOI and time range.
+            A Landsat 7 composite image of the specified AOI and time range.
         """
         for key in kwargs.keys():
             log.warn(f"Argument {key} is ignored.")
@@ -414,14 +414,14 @@ class Landsat8GEE(Landsat8Base):
 
     @property
     def name(self) -> str:
-        return "landsat8gee"
+        return "landsat7gee"
 
     @property
     def full_name(self) -> str:
-        return "Landsat 8 (GEE)"
+        return "Landsat 7 (GEE)"
 
 
-class Landsat8(Landsat8Base):
+class Landsat7(Landsat7Base):
     def get_time_series(
         self,
         aoi: BoundingBox,
@@ -430,7 +430,7 @@ class Landsat8(Landsat8Base):
         dtype: DType = DType.UInt16,
         **kwargs: Any,
     ) -> DownloadableGeedimImage:
-        """Get Landsat 8 collection.
+        """Get Landsat 7 collection.
 
         Parameters
         ----------
@@ -444,7 +444,7 @@ class Landsat8(Landsat8Base):
         Returns
         -------
         landsat_im: DownloadableGeedimImageCollection
-            A Landsat 8 time series collection of the specified AOI and time range.
+            A Landsat 7 time series collection of the specified AOI and time range.
         """
         for kwarg in kwargs:
             log.warn(f"Argument {kwarg} is ignored.")
@@ -455,9 +455,9 @@ class Landsat8(Landsat8Base):
         n_images = len(info["features"])
         if n_images == 0:
             log.error(
-                f"Found 0 Landsat 8 image." f"Check region {aoi.transform(WGS84)}."
+                f"Found 0 Landsat 7 image." f"Check region {aoi.transform(WGS84)}."
             )
-            raise RuntimeError("Collection of 0 Landsat 8 image.")
+            raise RuntimeError("Collection of 0 Landsat 7 image.")
         for feature in info["features"]:
             id_ = feature["id"]
             if Polygon(
@@ -466,7 +466,7 @@ class Landsat8(Landsat8Base):
                 # aoi intersects im
                 im = ee.Image(id_)
                 im = self.convert_image(im, dtype)
-                images[id_.removeprefix("LANDSAT/LC08/C02/T1_L2/")] = PatchedBaseImage(
+                images[id_.removeprefix("LANDSAT/LE07/C02/T1_L2/")] = PatchedBaseImage(
                     im
                 )
         return DownloadableGeedimImageCollection(images)
@@ -480,7 +480,7 @@ class Landsat8(Landsat8Base):
         dtype: DType = DType.Float32,
         **kwargs: Any,
     ) -> DownloadableGeedimImage:
-        """Get Landsat 8 collection.
+        """Get Landsat 7 collection.
 
         Parameters
         ----------
@@ -497,7 +497,7 @@ class Landsat8(Landsat8Base):
         Returns
         -------
         landsat_im : DownloadableGeedimImage
-            A Landsat 8 composite image of the specified AOI and time range.
+            A Landsat 7 composite image of the specified AOI and time range.
         """
         for key in kwargs.keys():
             log.warn(f"Argument {key} is ignored.")
@@ -510,20 +510,20 @@ class Landsat8(Landsat8Base):
         n_images = len(landsat_col.getInfo()["features"])
         if n_images > 500:
             log.warn(
-                f"Landsat 8 mosaicking with a large amount of images (n={n_images}). Expect slower download time."
+                f"Landsat 7 mosaicking with a large amount of images (n={n_images}). Expect slower download time."
             )
             log.info("Change cloud masking parameters to lower the amount of images.")
         if n_images == 0:
             log.error(
-                f"Found 0 Landsat 8 image for given parameters. Check region {aoi.transform(WGS84)}"
+                f"Found 0 Landsat 7 image for given parameters. Check region {aoi.transform(WGS84)}"
             )
-        log.debug(f"Landsat 8 mosaicking with {n_images} images.")
+        log.debug(f"Landsat 7 mosaicking with {n_images} images.")
         return DownloadableGeedimImage(landsat_im)
 
     @property
     def name(self) -> str:
-        return "landsat8"
+        return "landsat7"
 
     @property
     def full_name(self) -> str:
-        return "Landsat 8 (Geedim)"
+        return "Landsat 7 (Geedim)"

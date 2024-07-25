@@ -223,8 +223,7 @@ def download_landsat8(config_path: Path) -> None:
         config.landsat8.aoi.temporal.end_date,
         crs=(
             CRS.from_epsg(config.landsat8.aoi.spatial.epsg)
-            if config.landsat8.aoi.spatial.epsg
-            != 4326  # Need to check why config.s1.aoi.spatial.epsg is used for all function
+            if config.landsat8.aoi.spatial.epsg != 4326
             else None
         ),
         composite_method=config.landsat8.composite_method,
@@ -236,6 +235,74 @@ def download_landsat8(config_path: Path) -> None:
             None
             if config.landsat8.aoi.country is None
             else load_country_filter_polygon(config.landsat8.aoi.country)
+        ),
+    )
+
+
+def download_landsat7(config_path: Path) -> None:
+    """Download Landsat 7 images."""
+    config = load(config_path)
+    if config.landsat7 is None:
+        raise RuntimeError(
+            "Landsat 7 is not configured. Pass `landsat7: {}` in the config file to use `satellite_default`."
+        )
+    save_config(config.landsat7, config.data_dir / "landsat7")
+    data_dir = Path(config.data_dir)
+    auth(config.landsat7.gee.ee_project_id)
+    bounds = config.landsat7.aoi.spatial.as_bbox()
+    data.get.download_landsat7(
+        data_dir,
+        bounds,
+        config.landsat7.aoi.temporal.start_date,
+        config.landsat7.aoi.temporal.end_date,
+        crs=(
+            CRS.from_epsg(config.landsat7.aoi.spatial.epsg)
+            if config.landsat7.aoi.spatial.epsg != 4326
+            else None
+        ),
+        composite_method=config.landsat7.composite_method,
+        dtype=config.landsat7.dtype,
+        resolution=config.landsat7.resolution,
+        tile_shape=config.landsat7.tile_size,
+        max_tile_size=config.landsat7.gee.max_tile_size,
+        filter_polygon=(
+            None
+            if config.landsat7.aoi.country is None
+            else load_country_filter_polygon(config.landsat7.aoi.country)
+        ),
+    )
+
+
+def download_landsat5(config_path: Path) -> None:
+    """Download Landsat 5 images."""
+    config = load(config_path)
+    if config.landsat5 is None:
+        raise RuntimeError(
+            "Landsat 5 is not configured. Pass `landsat5: {}` in the config file to use `satellite_default`."
+        )
+    save_config(config.landsat5, config.data_dir / "landsat5")
+    data_dir = Path(config.data_dir)
+    auth(config.landsat5.gee.ee_project_id)
+    bounds = config.landsat5.aoi.spatial.as_bbox()
+    data.get.download_landsat5(
+        data_dir,
+        bounds,
+        config.landsat5.aoi.temporal.start_date,
+        config.landsat5.aoi.temporal.end_date,
+        crs=(
+            CRS.from_epsg(config.landsat5.aoi.spatial.epsg)
+            if config.landsat5.aoi.spatial.epsg != 4326
+            else None
+        ),
+        composite_method=config.landsat5.composite_method,
+        dtype=config.landsat5.dtype,
+        resolution=config.landsat5.resolution,
+        tile_shape=config.landsat5.tile_size,
+        max_tile_size=config.landsat5.gee.max_tile_size,
+        filter_polygon=(
+            None
+            if config.landsat5.aoi.country is None
+            else load_country_filter_polygon(config.landsat5.aoi.country)
         ),
     )
 
