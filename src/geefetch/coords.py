@@ -33,7 +33,6 @@ _UTM_ZONE_LETTERS = tuple(
     if char not in ["A", "B", "I", "O", "Y", "Z"]
 )
 
-
 _EPSILON = 1e-10
 
 WGS84 = CRS.from_epsg(4326)

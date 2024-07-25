@@ -96,6 +96,24 @@ def landsat8(config):
     download_landsat8(config)
 
 
+@download.command()
+@config_option
+def landsat7(config):
+    """Download Landsat 7 images."""
+    from .download_implementation import download_landsat7
+
+    download_landsat7(config)
+
+
+@download.command()
+@config_option
+def landsat5(config):
+    """Download Landsat 5 images."""
+    from .download_implementation import download_landsat5
+
+    download_landsat5(config)
+
+
 @main.group()
 def process():
     """Pre/post processing tools for GEDI, Sentinel-1 and Sentinel-2 data."""
