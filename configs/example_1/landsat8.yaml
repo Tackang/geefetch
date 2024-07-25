@@ -1,4 +1,4 @@
-data_dir: /esail3/satellite/landsat/landsat8_2021_test
+data_dir: /path/to/datadir
 satellite_default:
   resolution: 30
   tile_size: 5_000
